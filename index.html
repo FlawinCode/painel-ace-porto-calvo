@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Painel ACE — Porto Calvo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --papel:#F2F3F1; --tinta:#16211E; --grafite:#5C6663; --regua:#D6D9D4;
+  --satisfatorio:#2F5D50; --alerta:#A8801F; --risco:#8C3A2E;
+  --texto:"Public Sans",system-ui,sans-serif;
+  --dado:"IBM Plex Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--papel); color:var(--tinta); font-family:var(--texto);
+  font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+.env{max-width:860px;margin:0 auto;padding:0 20px 96px}
+
+/* ---------- cabeçalho ---------- */
+header{padding:28px 0 18px;border-bottom:2px solid var(--tinta)}
+.tarja{
+  font-family:var(--dado);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--grafite);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap
+}
+h1{font-size:24px;line-height:1.15;margin:10px 0 0;font-weight:700;letter-spacing:-.01em}
+h1 small{display:block;font-size:13px;font-weight:400;color:var(--grafite);letter-spacing:0;margin-top:4px}
+
+.contagem{display:flex;align-items:baseline;gap:14px;margin:20px 0 4px;flex-wrap:wrap}
+.contagem b{font-family:var(--dado);font-size:60px;font-weight:600;line-height:.9;letter-spacing:-.03em}
+.contagem span{font-size:13px;color:var(--grafite);max-width:22ch}
+
+/* ---------- navegação ---------- */
+nav{
+  position:sticky;top:0;z-index:20;background:var(--papel);
+  border-bottom:1px solid var(--regua);margin-bottom:26px;
+  display:flex;gap:2px;overflow-x:auto;scrollbar-width:none
+}
+nav::-webkit-scrollbar{display:none}
+nav button{
+  appearance:none;background:none;border:0;border-bottom:2px solid transparent;
+  font-family:var(--dado);font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--grafite);padding:14px 12px;cursor:pointer;white-space:nowrap
+}
+nav button[aria-selected="true"]{color:var(--tinta);border-bottom-color:var(--tinta)}
+nav button:focus-visible{outline:2px solid var(--tinta);outline-offset:-4px}
+
+/* ---------- blocos ---------- */
+section[hidden]{display:none}
+h2{
+  font-family:var(--dado);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--grafite);font-weight:500;margin:34px 0 12px;
+  padding-bottom:6px;border-bottom:1px solid var(--regua)
+}
+h2:first-child{margin-top:0}
+p.nota{font-size:13.5px;color:var(--grafite);margin:0 0 18px;max-width:62ch}
+
+/* ---------- faixa de estratificação (elemento-assinatura) ---------- */
+.faixa{padding:16px 0;border-bottom:1px solid var(--regua)}
+.faixa:last-child{border-bottom:0}
+.faixa-topo{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:9px}
+.faixa-nome{font-size:14.5px;font-weight:600;line-height:1.25}
+.faixa-peso{font-family:var(--dado);font-size:11px;color:var(--grafite);white-space:nowrap}
+.faixa-val{font-family:var(--dado);font-size:15px;font-weight:600;white-space:nowrap}
+.trilho{position:relative;height:16px;background:#E4E6E2;border:1px solid var(--regua)}
+.preenche{position:absolute;inset:0 auto 0 0;transition:width .5s cubic-bezier(.2,.7,.3,1)}
+.marca{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--tinta)}
+.marca::after{
+  content:attr(data-r);position:absolute;top:-14px;left:50%;transform:translateX(-50%);
+  font-family:var(--dado);font-size:9.5px;color:var(--grafite);white-space:nowrap
+}
+.amostra{display:flex;gap:3px;flex-wrap:wrap;margin-top:9px}
+.amostra i{width:9px;height:9px;border:1px solid var(--regua);display:block}
+.amostra i.tem{border-color:transparent}
+.faixa-rod{font-family:var(--dado);font-size:11px;color:var(--grafite);margin-top:7px}
+.ausente{color:var(--risco)}
+
+/* ---------- itens de lista ---------- */
+.item{padding:14px 0;border-bottom:1px solid var(--regua);display:flex;gap:12px;align-items:flex-start}
+.item:last-child{border-bottom:0}
+.selo{
+  font-family:var(--dado);font-size:11px;font-weight:600;letter-spacing:.04em;
+  padding:3px 7px;border:1px solid currentColor;white-space:nowrap;flex:0 0 auto;margin-top:1px
+}
+.corpo{min-width:0;flex:1}
+.alvo{font-family:var(--dado);font-size:14px;font-weight:600}
+.meta-linha{font-family:var(--dado);font-size:11px;color:var(--grafite);margin-top:2px}
+.motivo{font-size:14px;margin-top:5px;line-height:1.45}
+.venc{color:var(--risco);font-weight:600}
+
+/* ---------- controles ---------- */
+.filtros{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+.filtros button, .btn{
+  appearance:none;font-family:var(--dado);font-size:11.5px;letter-spacing:.06em;
+  text-transform:uppercase;background:none;color:var(--grafite);
+  border:1px solid var(--regua);padding:7px 12px;cursor:pointer
+}
+.filtros button[aria-pressed="true"]{background:var(--tinta);color:var(--papel);border-color:var(--tinta)}
+.btn{color:var(--tinta);border-color:var(--tinta)}
+.btn:hover{background:var(--tinta);color:var(--papel)}
+.btn:focus-visible,.filtros button:focus-visible{outline:2px solid var(--tinta);outline-offset:2px}
+details summary{
+  font-family:var(--dado);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--grafite);cursor:pointer;padding:8px 0
+}
+details summary:focus-visible{outline:2px solid var(--tinta);outline-offset:2px}
+
+/* ---------- cartão de recordação ---------- */
+.cartao{border:1px solid var(--tinta);padding:20px;margin-bottom:16px;background:#EFF0EE}
+.cartao-tarja{
+  font-family:var(--dado);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--grafite);display:flex;justify-content:space-between;gap:10px;margin-bottom:12px
+}
+.gatilho{font-size:19px;font-weight:600;line-height:1.32;margin:0 0 16px}
+.resposta{
+  border-top:1px solid var(--regua);padding-top:14px;font-size:15px;line-height:1.55;margin:0 0 16px
+}
+.acoes{display:flex;gap:8px;flex-wrap:wrap}
+.acoes .btn{flex:1;min-width:130px;padding:11px 12px;text-align:center}
+.btn.falhei{color:var(--risco);border-color:var(--risco)}
+.btn.falhei:hover{background:var(--risco);color:var(--papel)}
+.btn.lembrei{color:var(--satisfatorio);border-color:var(--satisfatorio)}
+.btn.lembrei:hover{background:var(--satisfatorio);color:var(--papel)}
+
+/* ---------- notas ---------- */
+.nota-secao{margin-bottom:22px}
+.nota-linha{
+  font-size:14.5px;line-height:1.5;padding:7px 0 7px 16px;
+  border-left:2px solid var(--regua);margin-bottom:2px
+}
+pre.saida{
+  font-family:var(--dado);font-size:12.5px;line-height:1.6;white-space:pre-wrap;
+  background:#EFF0EE;border:1px solid var(--regua);padding:16px;overflow-x:auto
+}
+
+.vazio{
+  font-size:14px;color:var(--grafite);border:1px dashed var(--regua);
+  padding:22px;text-align:center;line-height:1.5
+}
+.carregando{font-family:var(--dado);font-size:12px;color:var(--grafite);padding:40px 0;text-align:center}
+.erro-rede{border:1px solid var(--risco);color:var(--risco);padding:16px;font-size:14px}
+footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--regua);
+  font-family:var(--dado);font-size:10.5px;color:var(--grafite);letter-spacing:.05em}
+@media (max-width:560px){
+  .env{padding:0 16px 80px}
+  .contagem b{font-size:48px}
+  h1{font-size:20px}
+  .acoes .btn{min-width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="env">
+
+<header>
+  <div class="tarja">
+    <span>Boletim de preparação</span>
+    <span id="tarja-data">—</span>
+  </div>
+  <h1>Agente de Combate às Endemias — Porto Calvo/AL
+    <small>Edital IGEDUC nº 001/2026 · prova em 1º de novembro, 8h às 12h</small></h1>
+  <div class="contagem">
+    <b id="dias">—</b>
+    <span id="dias-rot">dias até a prova</span>
+  </div>
+  <div class="tarja" id="ritmo" style="margin-top:10px">—</div>
+</header>
+
+<nav role="tablist">
+  <button role="tab" aria-selected="true"  data-tela="painel">Estratificação</button>
+  <button role="tab" aria-selected="false" data-tela="fila">Fila</button>
+  <button role="tab" aria-selected="false" data-tela="erros">Erros</button>
+  <button role="tab" aria-selected="false" data-tela="cartoes">Cartões</button>
+  <button role="tab" aria-selected="false" data-tela="notas">Notas</button>
+</nav>
+
+<div id="falha" hidden class="erro-rede"></div>
+
+<section id="tela-painel">
+  <h2>Acurácia de janela por disciplina</h2>
+  <p class="nota">Cada faixa mede as dez questões válidas mais recentes de cada tópico da
+    disciplina. O traço vertical é a meta. Os quadradinhos abaixo são a amostragem: um por
+    tópico, preenchido quando já há questão válida registrada.</p>
+  <div id="faixas" class="carregando">carregando</div>
+  <h2>Avisos de esquema e agenda</h2>
+  <div id="avisos"></div>
+</section>
+
+<section id="tela-fila" hidden>
+  <h2>Fila de prioridade</h2>
+  <p class="nota">Computada na leitura, na ordem da Parte A. O primeiro item é a próxima ação.</p>
+  <div id="fila" class="carregando">carregando</div>
+</section>
+
+<section id="tela-erros" hidden>
+  <h2>Caderno de erros</h2>
+  <p class="nota">Ordenado pela data de revisão: o que está vencido vem primeiro.
+    Para ler e refletir — responder questão continua sendo na sessão.</p>
+  <div class="filtros" id="filtros-erros">
+    <button data-f="pendentes" aria-pressed="true">A revisar</button>
+    <button data-f="conceituais" aria-pressed="false">Só conceituais</button>
+    <button data-f="todos" aria-pressed="false">Todos</button>
+  </div>
+  <div id="erros" class="carregando">carregando</div>
+</section>
+
+<section id="tela-cartoes" hidden>
+  <h2>Recordação ativa</h2>
+  <p class="nota">Tente responder de cabeça antes de revelar. O esforço de puxar da memória é o
+    que fixa; reconhecer na tela não fixa. O que você marcar aqui agenda o cartão e não entra
+    na acurácia de janela.</p>
+  <div id="cartoes" class="carregando">carregando</div>
+</section>
+
+<section id="tela-notas" hidden>
+  <h2>Revisão final — para o Notas</h2>
+  <p class="nota">Blocos recolhidos ao fim de cada sessão. Curadoria fecha depois do Simulado 4,
+    em 11 de outubro; congelamento em 26 de outubro. Copie para a nota fixada no aplicativo
+    Notas, que funciona sem rede na manhã da prova.</p>
+  <div id="notas" class="carregando">carregando</div>
+</section>
+
+<footer id="rodape">—</footer>
+</div>
+
+<script>
+const API = "https://wruvptbjakmrerugacxn.supabase.co/rest/v1";
+const KEY = "sb_publishable_O3t8_vDv6P_k3xccsh462g_vDIGUZpr";
+const CAB = {apikey:KEY, Authorization:"Bearer "+KEY};
+
+const PESO = {
+  "Conhecimentos Profissionais":                       {q:15, pts:39.0},
+  "Rede de Atenção, Vigilância e Políticas Nacionais": {q:15, pts:39.0},
+  "Língua Portuguesa":                                 {q:10, pts:11.0},
+  "Informática":                                       {q: 5, pts: 5.5},
+  "Raciocínio Lógico":                                 {q: 5, pts: 5.5}
+};
+const ORDEM = Object.keys(PESO);
+const hoje = new Date(); hoje.setHours(0,0,0,0);
+
+const el = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pct = v => v === null || v === undefined ? "—" : Math.round(v*100) + "%";
+const dia = s => s ? s.split("-").reverse().slice(0,2).join("/") : "—";
+const atraso = s => s ? Math.round((hoje - new Date(s+"T00:00:00")) / 864e5) : null;
+const plural = (n,u,p) => n + " " + (Math.abs(n) === 1 ? u : p);
+
+async function ler(rota){
+  const r = await fetch(API + "/" + rota, {headers:CAB});
+  if(!r.ok) throw new Error(rota + " → " + r.status);
+  return r.json();
+}
+
+/* ================= estratificação ================= */
+function corDe(v, meta){
+  if(v === null) return "var(--grafite)";
+  if(v >= meta) return "var(--satisfatorio)";
+  if(v >= meta - 0.15) return "var(--alerta)";
+  return "var(--risco)";
+}
+
+function desenhaFaixas(janela, sessoes){
+  const ultima = {};
+  for(const s of sessoes){ if(s.valida) ultima[s.disciplina] = s.data > (ultima[s.disciplina]||"") ? s.data : ultima[s.disciplina]; }
+
+  el("faixas").className = "";
+  el("faixas").innerHTML = ORDEM.map(d => {
+    const ts   = janela.filter(t => t.disciplina === d);
+    const meta = ts.length ? Number(ts[0].meta) : 0.8;
+    const comD = ts.filter(t => t.janela_n > 0);
+    const ac   = comD.reduce((a,t) => a + Number(t.janela_acuracia), 0);
+    const val  = comD.length ? ac / comD.length : null;
+    const cor  = corDe(val, meta);
+    const dias = ultima[d] ? atraso(ultima[d]) : null;
+    const parada = dias === null || dias >= 10;
+
+    const quadros = ts.map(t =>
+      `<i class="${t.janela_n>0?"tem":""}" style="${t.janela_n>0?"background:"+corDe(Number(t.janela_acuracia),meta):""}" title="${esc(t.codigo)}"></i>`
+    ).join("");
+
+    const rod = parada
+      ? `<span class="ausente">Sem registro válido há ${dias === null ? "sempre" : plural(dias,"dia","dias")} — nível 0 da fila.</span>`
+      : `Último registro válido ${plural(dias,"dia","dias")} atrás.`;
+
+    return `<div class="faixa">
+      <div class="faixa-topo">
+        <div>
+          <div class="faixa-nome">${esc(d)}</div>
+          <div class="faixa-peso">${PESO[d].q} questões · ${PESO[d].pts.toFixed(1).replace(".",",")} pontos</div>
+        </div>
+        <div class="faixa-val" style="color:${cor}">${pct(val)}</div>
+      </div>
+      <div class="trilho">
+        <div class="preenche" style="width:${val ? val*100 : 0}%;background:${cor}"></div>
+        <div class="marca" style="left:${meta*100}%" data-r="meta ${Math.round(meta*100)}%"></div>
+      </div>
+      <div class="amostra">${quadros}</div>
+      <div class="faixa-rod">${comD.length} de ${ts.length} tópicos com questão válida · ${rod}</div>
+    </div>`;
+  }).join("");
+}
+
+/* ================= fila ================= */
+const ROTULO = ["Disciplina parada","Revisão vencida","Abaixo da meta","Erro conceitual aberto","Amostra insuficiente","Ainda não aberto"];
+
+function desenhaFila(fila){
+  const alvo = el("fila"); alvo.className = "";
+  let html = "";
+  for(let n = 0; n <= 5; n++){
+    const its = fila.filter(f => f.nivel === n);
+    if(!its.length) continue;
+    const linhas = its.map(f => `<div class="item">
+        <span class="selo" style="color:${n<=1?"var(--risco)":n<=3?"var(--alerta)":"var(--grafite)"}">N${n}</span>
+        <div class="corpo">
+          <div class="alvo">${esc(f.alvo)}</div>
+          <div class="meta-linha">${esc(f.disciplina)}</div>
+          <div class="motivo">${esc(f.motivo)}</div>
+        </div></div>`).join("");
+    html += n === 5
+      ? `<h2>Nível 5 — ${ROTULO[5]}</h2><details><summary>Mostrar os ${its.length} tópicos fechados</summary>${linhas}</details>`
+      : `<h2>Nível ${n} — ${ROTULO[n]}</h2>${linhas}`;
+  }
+  alvo.innerHTML = html || `<div class="vazio">Fila vazia. Nada vencido, nada abaixo da meta.</div>`;
+}
+
+/* ================= erros ================= */
+let ERROS = [], filtroErro = "pendentes";
+
+function desenhaErros(){
+  const alvo = el("erros"); alvo.className = "";
+  let lista = ERROS.slice();
+  if(filtroErro === "pendentes")   lista = lista.filter(e => e.situacao !== "Fechado");
+  if(filtroErro === "conceituais") lista = lista.filter(e => e.codigo_erro === "C" && e.situacao !== "Fechado");
+  lista.sort((a,b) => (a.proxima_revisao||"9999") .localeCompare(b.proxima_revisao||"9999"));
+
+  if(!lista.length){
+    alvo.innerHTML = `<div class="vazio">Nada aqui com esse filtro. Toque em “Todos” para ver o histórico fechado.</div>`;
+    return;
+  }
+  alvo.innerHTML = lista.map(e => {
+    const d = atraso(e.proxima_revisao);
+    const venceu = d !== null && d >= 0 && e.situacao !== "Fechado";
+    const quando = e.proxima_revisao
+      ? (venceu ? `<span class="venc">revisão vencida há ${plural(d,"dia","dias")}</span>` : `revisão em ${dia(e.proxima_revisao)}`)
+      : "sem revisão agendada";
+    const cor = e.situacao === "Fechado" ? "var(--grafite)" : e.codigo_erro === "C" ? "var(--risco)" : "var(--alerta)";
+    return `<div class="item">
+      <span class="selo" style="color:${cor}">${esc(e.codigo_erro)}</span>
+      <div class="corpo">
+        <div class="alvo">${esc(e.codigo)}</div>
+        <div class="meta-linha">${esc(e.disciplina)} · ${esc(e.situacao)} · registrado em ${dia(e.data)} · ${quando}</div>
+        <div class="motivo">${esc(e.entrada_reformulada)}</div>
+      </div></div>`;
+  }).join("");
+}
+
+/* ================= cartões ================= */
+let CARTOES = [], iCartao = 0, revelado = false;
+
+function desenhaCartao(){
+  const alvo = el("cartoes"); alvo.className = "";
+  const vencidos = CARTOES.filter(c => c.proxima <= hoje.toISOString().slice(0,10));
+  const baralho  = vencidos.length ? vencidos : CARTOES;
+
+  if(!CARTOES.length){
+    alvo.innerHTML = `<div class="vazio">Nenhum cartão ainda. Eles são criados ao fim de cada sessão de estudo.</div>`;
+    return;
+  }
+  if(!vencidos.length && iCartao === 0){
+    alvo.innerHTML = `<div class="vazio">Nenhum cartão vencido hoje. A memória está em dia.<br><br>
+      <button class="btn" id="forcar">Revisar mesmo assim</button></div>`;
+    el("forcar").onclick = () => { iCartao = 1; revelado = false; desenhaCartao(); };
+    return;
+  }
+  const c = baralho[(iCartao - (vencidos.length ? 0 : 1)) % baralho.length];
+  if(!c){ iCartao = 0; return desenhaCartao(); }
+
+  alvo.innerHTML = `<div class="cartao">
+    <div class="cartao-tarja">
+      <span>${esc(c.codigo)} · ${esc(c.disciplina || "")}</span>
+      <span>${vencidos.length ? vencidos.length + " a revisar" : "revisão extra"}</span>
+    </div>
+    <p class="gatilho">${esc(c.gatilho)}</p>
+    ${revelado ? `<p class="resposta">${esc(c.resposta)}</p>
+      <div class="acoes">
+        <button class="btn falhei"  data-r="0">Não lembrei</button>
+        <button class="btn lembrei" data-r="1">Lembrei</button>
+      </div>`
+    : `<div class="acoes"><button class="btn" id="revelar">Mostrar a resposta</button></div>`}
+  </div>`;
+
+  if(!revelado){ el("revelar").onclick = () => { revelado = true; desenhaCartao(); }; return; }
+  alvo.querySelectorAll("[data-r]").forEach(b => b.onclick = async () => {
+    b.disabled = true;
+    try{
+      await fetch(API + "/rpc/cartao_revisado", {
+        method:"POST", headers:{...CAB, "Content-Type":"application/json"},
+        body: JSON.stringify({p_id:c.id, p_lembrou: b.dataset.r === "1"})
+      });
+      c.proxima = "9999-12-31";
+    }catch(_){ /* o agendamento se recupera na próxima carga */ }
+    revelado = false; iCartao++;
+    CARTOES = CARTOES.filter(x => x.id !== c.id || x.proxima !== "9999-12-31");
+    desenhaCartao();
+  });
+}
+
+/* ================= notas ================= */
+const SECOES = ["Ler no trajeto","Meus erros","Áreas por peso","Logística"];
+
+function desenhaNotas(blocos){
+  const alvo = el("notas"); alvo.className = "";
+  const ativos = blocos.filter(b => b.incluir);
+  if(!ativos.length){
+    alvo.innerHTML = `<div class="vazio">A nota está vazia. Cada sessão de estudo acrescenta
+      até duas linhas aqui; no fim, a nota inteira sai pronta para copiar.</div>`;
+    return;
+  }
+  let texto = "ACE Porto Calvo — Revisão final\n";
+  let html  = "";
+  for(const s of SECOES){
+    const ls = ativos.filter(b => b.secao === s).sort((a,b) => a.ordem - b.ordem);
+    if(!ls.length) continue;
+    const corte = s === "Ler no trajeto" ? ls.slice(0,12) : ls;
+    texto += "\n" + s.toUpperCase() + "\n" + corte.map(b => "· " + b.linha).join("\n") + "\n";
+    html  += `<div class="nota-secao"><h2>${esc(s)}${s === "Ler no trajeto" ? ` — ${corte.length} de 12 linhas` : ""}</h2>`
+           + corte.map(b => `<div class="nota-linha">${esc(b.linha)}</div>`).join("") + `</div>`;
+  }
+  alvo.innerHTML = html
+    + `<button class="btn" id="copiar" style="margin:8px 0 18px">Copiar a nota inteira</button>`
+    + `<pre class="saida">${esc(texto)}</pre>`;
+  el("copiar").onclick = async () => {
+    try{ await navigator.clipboard.writeText(texto); el("copiar").textContent = "Copiado"; }
+    catch(_){ el("copiar").textContent = "Copie do quadro abaixo"; }
+  };
+}
+
+/* ================= abas ================= */
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav button").forEach(o => o.setAttribute("aria-selected", o === b));
+  document.querySelectorAll("section").forEach(s => s.hidden = s.id !== "tela-" + b.dataset.tela);
+  window.scrollTo({top:0, behavior:"instant"});
+});
+
+/* ================= carga ================= */
+(async function(){
+  try{
+    const [conf, janela, fila, ritmo, avisos, erros, cartoes, sess, blocos, tops] = await Promise.all([
+      ler("config?select=chave,valor"),
+      ler("v_janela?select=*"),
+      ler("v_fila?select=*&order=nivel.asc,desempate.desc"),
+      ler("v_ritmo?select=*"),
+      ler("v_avisos?select=*"),
+      ler("caderno_erros?select=*"),
+      ler("cartoes?select=*&ativo=is.true&order=proxima.asc"),
+      ler("sessoes?select=data,codigo,valida"),
+      ler("notas_blocos?select=*"),
+      ler("topicos?select=codigo,disciplina")
+    ]);
+
+    const mapaD = Object.fromEntries(tops.map(t => [t.codigo, t.disciplina]));
+    sess.forEach(s => s.disciplina = mapaD[s.codigo]);
+    erros.forEach(e => e.disciplina = mapaD[e.codigo]);
+    cartoes.forEach(c => c.disciplina = mapaD[c.codigo]);
+
+    const r = ritmo[0];
+    el("dias").textContent = r.dias_ate_prova;
+    el("dias-rot").textContent = "dias até a prova, em 1º de novembro";
+    el("tarja-data").textContent = "Atualizado em " + hoje.toLocaleDateString("pt-BR");
+    el("ritmo").innerHTML =
+      `<span>${r.topicos_fechados} tópicos ainda fechados</span>` +
+      `<span>${String(r.aberturas_por_dia).replace(".",",")} aberturas por dia até 28/09</span>` +
+      `<span>${r.dias_ate_prazo_abertura} dias até o prazo de última abertura</span>`;
+
+    desenhaFaixas(janela, sess);
+    desenhaFila(fila);
+    ERROS = erros; desenhaErros();
+    CARTOES = cartoes; desenhaCartao();
+    desenhaNotas(blocos);
+
+    el("avisos").innerHTML = avisos.length
+      ? avisos.map(a => `<div class="item"><span class="selo" style="color:var(--alerta)">!</span>
+          <div class="corpo"><div class="alvo">${esc(a.alvo)}</div>
+          <div class="meta-linha">${esc(a.area)}</div>
+          <div class="motivo">${esc(a.aviso)}</div></div></div>`).join("")
+      : `<div class="vazio">Nenhuma inconsistência. Unidades, vocabulários e status conferem com a Parte A.</div>`;
+
+    const v = conf.find(c => c.chave === "versao");
+    el("rodape").textContent =
+      `${janela.length} tópicos · ${sess.length} registros de sessão · ${erros.length} entradas no caderno · ` +
+      `${cartoes.length} cartões · origem: painel ${v ? v.valor : ""}`;
+
+    document.querySelectorAll("#filtros-erros button").forEach(b => b.onclick = () => {
+      filtroErro = b.dataset.f;
+      document.querySelectorAll("#filtros-erros button").forEach(o => o.setAttribute("aria-pressed", o === b));
+      desenhaErros();
+    });
+  }catch(e){
+    const f = el("falha"); f.hidden = false;
+    f.textContent = "Não deu para carregar os dados: " + e.message +
+      ". Confira a conexão e recarregue a página.";
+    document.querySelectorAll(".carregando").forEach(n => n.textContent = "");
+  }
+})();
+</script>
+</body>
+</html>
