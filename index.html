@@ -274,8 +274,12 @@ function desenhaFaixas(janela, sessoes){
     const ts   = janela.filter(t => t.disciplina === d);
     const meta = ts.length ? Number(ts[0].meta) : 0.8;
     const comD = ts.filter(t => t.janela_n > 0);
-    const ac   = comD.reduce((a,t) => a + Number(t.janela_acuracia), 0);
-    const val  = comD.length ? ac / comD.length : null;
+    // Agrupada por questão, não média de tópicos: um tópico com 1 questão não pode
+    // pesar o mesmo que um com 10. A média de tópicos deixava Informática em verde
+    // falso, 86% contra 67% reais.
+    const nQ   = comD.reduce((a,t) => a + Number(t.janela_n), 0);
+    const acQ  = comD.reduce((a,t) => a + Number(t.janela_acertos), 0);
+    const val  = nQ ? acQ / nQ : null;
     const cor  = corDe(val, meta);
     const dias = ultima[d] ? atraso(ultima[d]) : null;
     const parada = dias === null || dias >= 10;
@@ -301,7 +305,7 @@ function desenhaFaixas(janela, sessoes){
         <div class="marca" style="left:${meta*100}%" data-r="meta ${Math.round(meta*100)}%"></div>
       </div>
       <div class="amostra">${quadros}</div>
-      <div class="faixa-rod">${comD.length} de ${ts.length} tópicos com questão válida · ${rod}</div>
+      <div class="faixa-rod">${acQ} de ${nQ} questões na janela · ${comD.length} de ${ts.length} tópicos com questão válida · ${rod}</div>
     </div>`;
   }).join("");
 }
