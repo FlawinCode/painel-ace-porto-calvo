@@ -84,6 +84,11 @@ p.nota{font-size:13.5px;color:var(--grafite);margin:0 0 18px;max-width:62ch}
 .amostra{display:flex;gap:3px;flex-wrap:wrap;margin-top:9px}
 .amostra i{width:9px;height:9px;border:1px solid var(--regua);display:block}
 .amostra i.tem{border-color:transparent}
+.legenda{display:flex;flex-wrap:wrap;gap:14px;margin-top:20px;padding-top:14px;
+  border-top:1px solid var(--regua);font-family:var(--dado);font-size:11px;color:var(--grafite)}
+.legenda span{display:flex;align-items:center;gap:6px}
+.legenda i{width:9px;height:9px;border:1px solid var(--regua);display:block;flex:0 0 auto}
+.legenda i.tem{border-color:transparent}
 .faixa-rod{font-family:var(--dado);font-size:11px;color:var(--grafite);margin-top:7px}
 .ausente{color:var(--risco)}
 
@@ -195,6 +200,15 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--regua);
     disciplina. O traço vertical é a meta. Os quadradinhos abaixo são a amostragem: um por
     tópico, preenchido quando já há questão válida registrada.</p>
   <div id="faixas" class="carregando">carregando</div>
+  <div class="legenda">
+    <span><i></i>sem questão válida</span>
+    <span><i class="tem" style="background:var(--satisfatorio)"></i>na meta ou acima</span>
+    <span><i class="tem" style="background:var(--alerta)"></i>até 15 pontos abaixo da meta</span>
+    <span><i class="tem" style="background:var(--risco)"></i>mais de 15 pontos abaixo da meta</span>
+  </div>
+  <p class="nota" style="margin-top:12px">A cor não pondera o tamanho da amostra: um tópico
+  com uma única questão errada fica igual a um com dez erradas. Quem separa os dois casos é a
+  fila, no nível 4. Passe o mouse sobre um quadradinho para ver de qual tópico ele é.</p>
   <h2>Avisos de esquema e agenda</h2>
   <div id="avisos"></div>
 </section>
@@ -291,8 +305,10 @@ function desenhaFaixas(janela, sessoes){
     const dias = ultima[d] ? atraso(ultima[d]) : null;
     const parada = dias === null || dias >= 10;
 
-    const quadros = ts.map(t =>
-      `<i class="${t.janela_n>0?"tem":""}" style="${t.janela_n>0?"background:"+corDe(Number(t.janela_acuracia),meta):""}" title="${esc(t.codigo)}"></i>`
+    const quadros = ts.map(t => t.janela_n > 0
+      ? `<i class="tem" style="background:${corDe(Number(t.janela_acuracia),meta)}"
+           title="${esc(t.codigo)} · ${t.janela_acertos}/${t.janela_n} na janela (${pct(Number(t.janela_acuracia))})"></i>`
+      : `<i title="${esc(t.codigo)} · sem questão válida"></i>`
     ).join("");
 
     const rod = parada
