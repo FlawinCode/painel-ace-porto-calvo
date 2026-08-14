@@ -74,6 +74,9 @@ p.nota{font-size:13.5px;color:var(--grafite);margin:0 0 18px;max-width:62ch}
 .faixa-nome{font-size:14.5px;font-weight:600;line-height:1.25}
 .faixa-peso{font-family:var(--dado);font-size:11px;color:var(--grafite);white-space:nowrap}
 .faixa-val{font-family:var(--dado);font-size:15px;font-weight:600;white-space:nowrap}
+.faixa-projecao .faixa-nome{font-size:16px}
+.projecao-val{font-family:var(--dado);font-size:30px;font-weight:600;line-height:1.1;white-space:nowrap}
+.faixa-projecao .trilho{height:22px}
 .trilho{position:relative;height:16px;background:#E4E6E2;border:1px solid var(--regua)}
 .preenche{position:absolute;inset:0 auto 0 0;transition:width .5s cubic-bezier(.2,.7,.3,1)}
 .marca{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--tinta)}
@@ -286,12 +289,43 @@ function corDe(v, meta){
   return "var(--risco)";
 }
 
-function desenhaFaixas(janela, sessoes){
+function desenhaProjecao(projecao){
+  const geral = projecao.find(p => p.disciplina === "Geral");
+  if(!geral) return "";
+
+  const piso = Number(geral.pontos_piso);
+  const teto = Number(geral.pontos_teto);
+  const abertos = Number(geral.topicos_abertos);
+  const total = Number(geral.topicos_total);
+  const largura = Math.round(teto - piso);
+  const cor = piso > 70 ? "var(--satisfatorio)" : teto < 70 ? "var(--risco)" : "var(--tinta)";
+
+  const porDisciplina = projecao.filter(p => p.disciplina !== "Geral")
+    .sort((a,b) => ORDEM.indexOf(a.disciplina) - ORDEM.indexOf(b.disciplina));
+  const tooltip = porDisciplina.map(p =>
+    `${p.disciplina}: ${Math.round(Number(p.pontos_piso))} a ${Math.round(Number(p.pontos_teto))} (${pct(p.cobertura)} de cobertura)`
+  ).join("\n");
+
+  return `<div class="faixa faixa-projecao">
+    <div class="faixa-topo">
+      <div class="faixa-nome">Projeção de nota</div>
+      <div class="projecao-val" style="color:${cor}" title="${esc(tooltip)}">${Math.round(piso)} a ${Math.round(teto)}</div>
+    </div>
+    <div class="trilho">
+      <div class="preenche" style="left:${piso}%;width:${teto-piso}%;background:var(--alerta)"></div>
+      <div class="marca" style="left:70%;background:var(--risco)" data-r="corte 70"></div>
+      <div class="marca" style="left:85%;background:var(--tinta)" data-r="meta 85"></div>
+    </div>
+    <div class="faixa-rod">${largura} pontos de faixa · cobertura ${abertos} de ${total} tópicos (${pct(geral.cobertura)}) · cada tópico aberto aperta a faixa</div>
+  </div>`;
+}
+
+function desenhaFaixas(janela, sessoes, projecao){
   const ultima = {};
   for(const s of sessoes){ if(s.valida) ultima[s.disciplina] = s.data > (ultima[s.disciplina]||"") ? s.data : ultima[s.disciplina]; }
 
   el("faixas").className = "";
-  el("faixas").innerHTML = ORDEM.map(d => {
+  el("faixas").innerHTML = desenhaProjecao(projecao) + ORDEM.map(d => {
     const ts   = janela.filter(t => t.disciplina === d);
     const meta = ts.length ? Number(ts[0].meta) : 0.8;
     const comD = ts.filter(t => t.janela_n > 0);
@@ -478,7 +512,7 @@ document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
 /* ================= carga ================= */
 (async function(){
   try{
-    const [conf, janela, fila, ritmo, avisos, erros, cartoes, sess, blocos, tops] = await Promise.all([
+    const [conf, janela, fila, ritmo, avisos, erros, cartoes, sess, blocos, tops, projecao] = await Promise.all([
       ler("config?select=chave,valor"),
       ler("v_janela?select=*"),
       ler("v_fila?select=*&order=nivel.asc,desempate.desc"),
@@ -488,7 +522,8 @@ document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
       ler("cartoes?select=*&ativo=is.true&order=proxima.asc"),
       ler("sessoes?select=data,codigo,valida"),
       ler("notas_blocos?select=*"),
-      ler("topicos?select=codigo,disciplina")
+      ler("topicos?select=codigo,disciplina"),
+      ler("v_projecao?select=*")
     ]);
 
     const mapaD = Object.fromEntries(tops.map(t => [t.codigo, t.disciplina]));
@@ -505,7 +540,7 @@ document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
       `<span>${String(r.aberturas_por_dia).replace(".",",")} aberturas por dia até 28/09</span>` +
       `<span>${r.dias_ate_prazo_abertura} dias até o prazo de última abertura</span>`;
 
-    desenhaFaixas(janela, sess);
+    desenhaFaixas(janela, sess, projecao);
     desenhaFila(fila);
     ERROS = erros; desenhaErros();
     CARTOES = cartoes; desenhaCartao();
