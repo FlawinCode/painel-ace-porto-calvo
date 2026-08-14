@@ -293,12 +293,16 @@ function desenhaProjecao(projecao){
   const geral = projecao.find(p => p.disciplina === "Geral");
   if(!geral) return "";
 
-  const piso = Number(geral.pontos_piso);
-  const teto = Number(geral.pontos_teto);
+  const pisoBruto = Number(geral.pontos_piso);
+  const tetoBruto = Number(geral.pontos_teto);
+  // Arredonda antes de subtrair: os números exibidos são a fonte da largura e da
+  // barra, senão o rodapé diz 26 enquanto 60 e 87 na tela dizem 27.
+  const piso = Math.round(pisoBruto);
+  const teto = Math.round(tetoBruto);
   const abertos = Number(geral.topicos_abertos);
   const total = Number(geral.topicos_total);
-  const largura = Math.round(teto - piso);
-  const cor = piso > 70 ? "var(--satisfatorio)" : teto < 70 ? "var(--risco)" : "var(--tinta)";
+  const largura = teto - piso;
+  const cor = pisoBruto > 70 ? "var(--satisfatorio)" : tetoBruto < 70 ? "var(--risco)" : "var(--tinta)";
 
   const porDisciplina = projecao.filter(p => p.disciplina !== "Geral")
     .sort((a,b) => ORDEM.indexOf(a.disciplina) - ORDEM.indexOf(b.disciplina));
@@ -309,10 +313,10 @@ function desenhaProjecao(projecao){
   return `<div class="faixa faixa-projecao">
     <div class="faixa-topo">
       <div class="faixa-nome">Projeção de nota</div>
-      <div class="projecao-val" style="color:${cor}" title="${esc(tooltip)}">${Math.round(piso)} a ${Math.round(teto)}</div>
+      <div class="projecao-val" style="color:${cor}" title="${esc(tooltip)}">${piso} a ${teto}</div>
     </div>
     <div class="trilho">
-      <div class="preenche" style="left:${piso}%;width:${teto-piso}%;background:var(--alerta)"></div>
+      <div class="preenche" style="left:${piso}%;width:${largura}%;background:var(--alerta)"></div>
       <div class="marca" style="left:70%;background:var(--risco)" data-r="corte 70"></div>
       <div class="marca" style="left:85%;background:var(--tinta)" data-r="meta 85"></div>
     </div>
