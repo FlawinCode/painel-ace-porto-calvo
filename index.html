@@ -8,8 +8,17 @@
 <link rel="icon" href="icons/favicon-16.png" sizes="16x16" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#F6F3EC">
+<meta name="theme-color" id="tema-cor" content="#F2F3F1">
 <meta name="apple-mobile-web-app-title" content="Painel ACE">
+<script>
+(function(){
+  try{
+    var t = localStorage.getItem("tema") ||
+      (matchMedia("(prefers-color-scheme: dark)").matches ? "escuro" : "claro");
+    document.documentElement.setAttribute("data-tema", t);
+  }catch(_){}
+})();
+</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,14 +27,23 @@
 :root{
   --papel:#F2F3F1; --tinta:#16211E; --grafite:#5C6663; --regua:#D6D9D4;
   --satisfatorio:#2F5D50; --alerta:#A8801F; --risco:#8C3A2E;
+  --superficie:#EFF0EE; --trilho-fundo:#E4E6E2;
   --texto:"Public Sans",system-ui,sans-serif;
   --dado:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+:root[data-tema="escuro"]{
+  --papel:#14181A; --tinta:#E9ECE7; --grafite:#8B958F; --regua:#2B322E;
+  --satisfatorio:#5FA98F; --alerta:#D9AE55; --risco:#D9765F;
+  --superficie:#1A2022; --trilho-fundo:#20262A;
+  color-scheme:dark;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{
   background:var(--papel); color:var(--tinta); font-family:var(--texto);
   font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased;
+  transition:background-color .2s ease, color .2s ease;
 }
 .env{max-width:860px;margin:0 auto;padding:0 20px 96px}
 
@@ -35,6 +53,13 @@ header{padding:28px 0 18px;border-bottom:2px solid var(--tinta)}
   font-family:var(--dado);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
   color:var(--grafite);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap
 }
+.tarja-dir{display:flex;align-items:center;gap:12px}
+.alterna-tema{
+  appearance:none;font-family:var(--dado);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  background:none;color:var(--grafite);border:1px solid var(--regua);padding:4px 9px;cursor:pointer
+}
+.alterna-tema:hover{color:var(--tinta);border-color:var(--tinta)}
+.alterna-tema:focus-visible{outline:2px solid var(--tinta);outline-offset:2px}
 h1{font-size:24px;line-height:1.15;margin:10px 0 0;font-weight:700;letter-spacing:-.01em}
 h1 small{display:block;font-size:13px;font-weight:400;color:var(--grafite);letter-spacing:0;margin-top:4px}
 
@@ -77,7 +102,7 @@ p.nota{font-size:13.5px;color:var(--grafite);margin:0 0 18px;max-width:62ch}
 .faixa-projecao .faixa-nome{font-size:16px}
 .projecao-val{font-family:var(--dado);font-size:30px;font-weight:600;line-height:1.1;white-space:nowrap}
 .faixa-projecao .trilho{height:22px}
-.trilho{position:relative;height:16px;background:#E4E6E2;border:1px solid var(--regua)}
+.trilho{position:relative;height:16px;background:var(--trilho-fundo);border:1px solid var(--regua)}
 .preenche{position:absolute;inset:0 auto 0 0;transition:width .5s cubic-bezier(.2,.7,.3,1)}
 .marca{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--tinta)}
 .marca::after{
@@ -126,7 +151,7 @@ details summary{
 details summary:focus-visible{outline:2px solid var(--tinta);outline-offset:2px}
 
 /* ---------- cartão de recordação ---------- */
-.cartao{border:1px solid var(--tinta);padding:20px;margin-bottom:16px;background:#EFF0EE}
+.cartao{border:1px solid var(--tinta);padding:20px;margin-bottom:16px;background:var(--superficie)}
 .cartao-tarja{
   font-family:var(--dado);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
   color:var(--grafite);display:flex;justify-content:space-between;gap:10px;margin-bottom:12px
@@ -150,7 +175,7 @@ details summary:focus-visible{outline:2px solid var(--tinta);outline-offset:2px}
 }
 pre.saida{
   font-family:var(--dado);font-size:12.5px;line-height:1.6;white-space:pre-wrap;
-  background:#EFF0EE;border:1px solid var(--regua);padding:16px;overflow-x:auto
+  background:var(--superficie);border:1px solid var(--regua);padding:16px;overflow-x:auto
 }
 
 .vazio{
@@ -176,7 +201,10 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--regua);
 <header>
   <div class="tarja">
     <span>Boletim de preparação</span>
-    <span id="tarja-data">—</span>
+    <span class="tarja-dir">
+      <span id="tarja-data">—</span>
+      <button type="button" id="alternar-tema" class="alterna-tema" aria-pressed="false">Modo escuro</button>
+    </span>
   </div>
   <h1>Agente de Combate às Endemias — Porto Calvo/AL
     <small>Edital IGEDUC nº 001/2026 · prova em 1º de novembro, 8h às 12h</small></h1>
@@ -269,6 +297,29 @@ const ORDEM = Object.keys(PESO);
 const hoje = new Date(); hoje.setHours(0,0,0,0);
 
 const el = id => document.getElementById(id);
+
+/* ================= tema ================= */
+function aplicaTema(t){
+  document.documentElement.setAttribute("data-tema", t);
+  const cor = el("tema-cor"); if(cor) cor.setAttribute("content", t === "escuro" ? "#14181A" : "#F2F3F1");
+  const btn = el("alternar-tema");
+  if(btn){
+    btn.textContent = t === "escuro" ? "Modo claro" : "Modo escuro";
+    btn.setAttribute("aria-pressed", t === "escuro");
+  }
+}
+aplicaTema(document.documentElement.getAttribute("data-tema") || "claro");
+el("alternar-tema").onclick = () => {
+  const novo = document.documentElement.getAttribute("data-tema") === "escuro" ? "claro" : "escuro";
+  try{ localStorage.setItem("tema", novo); }catch(_){}
+  aplicaTema(novo);
+};
+try{
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", e => {
+    if(!localStorage.getItem("tema")) aplicaTema(e.matches ? "escuro" : "claro");
+  });
+}catch(_){}
+
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const pct = v => v === null || v === undefined ? "—" : Math.round(v*100) + "%";
 const dia = s => s ? s.split("-").reverse().slice(0,2).join("/") : "—";
